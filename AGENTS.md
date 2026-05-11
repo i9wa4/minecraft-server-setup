@@ -34,8 +34,8 @@ checks.
   units.
 - `nix/checks.nix`: flake checks for packages, compose config, and module
   wiring.
-- `treefmt.nix`: repo formatting policy for `nix fmt` and
-  `checks.*.formatting`.
+- `nix/flake-parts/modules/treefmt.nix`: repo formatting policy for `nix fmt`
+  and `checks.*.formatting`.
 - `.github/workflows/ci.yml`: GitHub Actions entrypoint; keep it thin and let
   Nix checks own repo validation.
 - `.github/dependabot.yml`: dependency update policy for GitHub Actions and Nix.
@@ -61,9 +61,9 @@ script source tree for normal operations.
   flow. Do not replace it with Ubuntu's unofficial `docker.io` package.
 - Runtime secrets and host-local values belong in ignored `.env.mbs` and
   `.env.mjs` files, not in Nix or committed docs.
-- Do not run `mbs backup-cloud`, `nix run .#mbs-backup-cloud`, `aws sso login`,
-  `aws configure`, or any AWS credential-changing command unless the user
-  explicitly requests it in the current turn.
+- Do not run `mbs backup-cloud`, `nix run '.#mbs-backup-cloud'`,
+  `aws sso login`, `aws configure`, or any AWS credential-changing command
+  unless the user explicitly requests it in the current turn.
 - Cloud backup is manual by default. Do not enable `backup.cloud.enable` unless
   the user explicitly asks for scheduled cloud backup.
 - Bedrock world backups are owned by the `backup` service in `compose.mbs.yml`.
@@ -87,28 +87,28 @@ nix fmt
 Use `path:$PWD` while files are untracked or before committing new flake files:
 
 ```sh
-nix flake check --all-systems path:$PWD
+nix flake check --all-systems "path:$PWD"
 ```
 
 For focused package checks:
 
 ```sh
-nix build path:$PWD#mbs path:$PWD#mjs path:$PWD#mc-server
+nix build "path:$PWD#mbs" "path:$PWD#mjs" "path:$PWD#mc-server"
 ```
 
 For CLI smoke checks:
 
 ```sh
-nix run path:$PWD#mbs -- help
-nix run path:$PWD#mjs -- help
+nix run "path:$PWD#mbs" -- help
+nix run "path:$PWD#mjs" -- help
 ```
 
 For Home Manager wiring checks:
 
 ```sh
-nix eval path:$PWD#homeConfigurations.mbs.config.systemd.user.timers --json | jq 'keys'
-nix eval path:$PWD#homeConfigurations.mjs.config.systemd.user.timers --json | jq 'keys'
-nix eval path:$PWD#homeConfigurations.mc.config.systemd.user.timers --json | jq 'keys'
+nix eval "path:$PWD#homeConfigurations.mbs.config.systemd.user.timers" --json | jq 'keys'
+nix eval "path:$PWD#homeConfigurations.mjs.config.systemd.user.timers" --json | jq 'keys'
+nix eval "path:$PWD#homeConfigurations.mc.config.systemd.user.timers" --json | jq 'keys'
 ```
 
 After `flake.nix` is tracked, the normal forms are acceptable:
@@ -116,7 +116,7 @@ After `flake.nix` is tracked, the normal forms are acceptable:
 ```sh
 nix fmt
 nix flake check --all-systems
-nix build .#mbs .#mjs .#mc-server
+nix build '.#mbs' '.#mjs' '.#mc-server'
 ```
 
 Do not require a Docker daemon for repository checks. Compose validation belongs

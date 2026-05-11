@@ -10,6 +10,37 @@ This repository separates the server flavors by command and config:
 Docker Compose remains the runtime declaration. Nix owns the CLI packages, Home
 Manager module, systemd user services/timers, formatter, and checks.
 
+## Quick Start
+
+On an Ubuntu server with Nix flakes and Home Manager already available:
+
+```sh
+git clone https://github.com/i9wa4/minecraft-server-setup ~/mc/server-setup
+cd ~/mc/server-setup
+
+# Bedrock: mbs. Java: mjs.
+cp .env.mbs.example .env.mbs
+vim .env.mbs
+
+nix run '.#mbs-host-setup'
+```
+
+Log out and back in once so Docker group membership is active. Then:
+
+```sh
+cd ~/mc/server-setup
+nix run '.#mbs-doctor'
+nix run '.#mbs-host-init'
+home-manager switch --flake '.#mbs'
+systemctl --user status mbs
+```
+
+For Java, use `.env.mjs`, `mjs-*`, and `home-manager switch --flake '.#mjs'`.
+Use `.#mc` only when running both `mbs` and `mjs` on the same host.
+
+Cloud backup is manual: log in to AWS intentionally, then run `mbs backup-cloud`
+or `mjs backup-cloud`.
+
 ## 1. Operating Model
 
 Host-level setup is still host-level:
@@ -77,9 +108,9 @@ group.
 Use either flavor command; `host-setup` is the same host bootstrap path:
 
 ```sh
-nix run .#mbs-host-setup
+nix run '.#mbs-host-setup'
 # or
-nix run .#mjs-host-setup
+nix run '.#mjs-host-setup'
 ```
 
 Log out and back in after `host-setup` so Docker group membership is
@@ -104,17 +135,17 @@ Edit values for your host:
 Run doctor before changing the firewall.
 
 ```sh
-nix run .#mbs-doctor
-nix run .#mjs-doctor
+nix run '.#mbs-doctor'
+nix run '.#mjs-doctor'
 ```
 
 Initialize host firewall rules and systemd user lingering for the flavor you
 plan to expose.
 
 ```sh
-nix run .#mbs-host-init
+nix run '.#mbs-host-init'
 # or
-nix run .#mjs-host-init
+nix run '.#mjs-host-init'
 ```
 
 `host-init` enables UFW. Confirm you are allowing the correct SSH port before
@@ -124,18 +155,18 @@ running it.
 
 Choose the Home Manager profile that matches the server flavor you want:
 
-| Profile | Services | Use when |
-| --- | --- | --- |
-| `.#mbs` | `mbs` only | Bedrock server only |
-| `.#mjs` | `mjs` only | Java server only, including the future GeyserMC path |
-| `.#mc` | `mbs` and `mjs` | Running both flavors on one host |
+| Profile | Services        | Use when                                             |
+| ------- | --------------- | ---------------------------------------------------- |
+| `.#mbs` | `mbs` only      | Bedrock server only                                  |
+| `.#mjs` | `mjs` only      | Java server only, including the future GeyserMC path |
+| `.#mc`  | `mbs` and `mjs` | Running both flavors on one host                     |
 
 ```sh
-home-manager switch --flake .#mbs
+home-manager switch --flake '.#mbs'
 # or
-home-manager switch --flake .#mjs
+home-manager switch --flake '.#mjs'
 # or
-home-manager switch --flake .#mc
+home-manager switch --flake '.#mc'
 ```
 
 Each enabled server creates the same shape of user units:
@@ -179,21 +210,21 @@ systemctl --user restart mjs
 Before Home Manager installs the packages, use `nix run`:
 
 ```sh
-nix run .#mbs-up
-nix run .#mbs-logs
-nix run .#mbs-ps
-nix run .#mbs-update
-nix run .#mbs-backup-local
+nix run '.#mbs-up'
+nix run '.#mbs-logs'
+nix run '.#mbs-ps'
+nix run '.#mbs-update'
+nix run '.#mbs-backup-local'
 ```
 
 Java:
 
 ```sh
-nix run .#mjs-up
-nix run .#mjs-logs
-nix run .#mjs-ps
-nix run .#mjs-update
-nix run .#mjs-backup-local
+nix run '.#mjs-up'
+nix run '.#mjs-logs'
+nix run '.#mjs-ps'
+nix run '.#mjs-update'
+nix run '.#mjs-backup-local'
 ```
 
 After Home Manager installs the packages, use the shorter command:
@@ -258,7 +289,7 @@ Update the repo and apply Home Manager changes:
 ```sh
 cd ~/mc/server-setup
 git pull
-home-manager switch --flake .#mbs
+home-manager switch --flake '.#mbs'
 # or .#mjs / .#mc
 ```
 
@@ -453,7 +484,7 @@ Format and validate the repo through Nix:
 ```sh
 nix fmt
 nix flake check --all-systems
-nix build .#mbs .#mjs .#mc-server
+nix build '.#mbs' '.#mjs' '.#mc-server'
 ```
 
 While new flake files are still untracked:
@@ -461,5 +492,5 @@ While new flake files are still untracked:
 ```sh
 git add <new-files>
 nix fmt
-nix flake check --all-systems path:$PWD
+nix flake check --all-systems "path:$PWD"
 ```

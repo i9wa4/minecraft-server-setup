@@ -72,7 +72,7 @@ let
       ''
         cd ${self}
         statix check .
-        deadnix --fail flake.nix nix treefmt.nix
+        deadnix --fail flake.nix nix
         touch $out
       '';
 
