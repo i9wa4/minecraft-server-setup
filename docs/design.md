@@ -53,6 +53,26 @@ checks, and systemd user wiring around Compose.
 Do not replace it with Ubuntu's `docker.io` package unless this repo explicitly
 decides to stop tracking Docker's upstream install method.
 
+## Bedrock Runtime Policy
+
+`mbs` is intended to stay a survival Bedrock server without cheat-mode
+operation. Do not enable `allow-cheats`, creative mode, command block workflows,
+or operator-only gameplay shortcuts as part of the default setup.
+
+The default practical server policy is:
+
+- keep `allow-cheats=false`
+- keep `online-mode=true`
+- keep the default player permission level at `member`
+- enable coordinates with `gamerule showcoordinates true`
+- enable the Bedrock allowlist for normal access control
+- add currently approved players to `allowlist.json` without committing player
+  names or XUIDs to the repository
+
+Coordinates are treated as quality-of-life information, not cheat-mode
+operation. Allowlist membership is host-local runtime state and belongs in the
+server data directory, not in tracked Nix or Markdown files.
+
 ## GeyserMC Direction
 
 `mjs` is expected to be the home for a future GeyserMC-based Java server setup.
