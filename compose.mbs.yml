@@ -36,9 +36,8 @@ services:
       # Without this, your log timestamps will be in the GMT timezone.
       TZ: ${MY_TZ}
     volumes:
-      # (Optional) Map a configuration folder separately from the backups.
-      # - /minecraft/backup-config:/config
-      - "${DIR_REPO}/backup-config:/config"
+      # Map the Bedrock backup sidecar config separately from backup data.
+      - "${DIR_REPO}/config/mbs/backup:/config"
       # Map your backups folder into /data
       # - /minecraft/backups:/data
       - "${DIR_BACKUP_WORLDS}:/data"

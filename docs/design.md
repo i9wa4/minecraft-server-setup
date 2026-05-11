@@ -68,7 +68,8 @@ World backups and core config backups are separate concerns.
 
 `mbs` world backups are handled by the Bedrock backup sidecar in
 `compose.mbs.yml`. `mbs backup-local` and `mjs backup-local` back up core config
-files only.
+files only. The Bedrock sidecar config is scoped under
+`config/mbs/backup/config.yml`.
 
 Java world backups need a Java-safe strategy before scheduling. Acceptable
 directions include RCON `save-off`/`save-all flush`/archive/`save-on`, a

@@ -285,6 +285,7 @@ World data and core config are backed up separately.
 For `mbs`, world backups are handled by the `backup` service in
 `compose.mbs.yml` using `kaiede/minecraft-bedrock-backup`. That container talks
 to the Bedrock server and writes world backups into `DIR_BACKUP_WORLDS`.
+Its sidecar config lives in `config/mbs/backup/config.yml`.
 
 The Nix-managed `<server>-backup-local.timer` backs up core config files. It
 does not back up Java world data.

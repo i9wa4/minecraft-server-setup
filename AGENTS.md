@@ -42,6 +42,7 @@ checks.
 - `docs/design.md`: design notes and operational boundaries.
 - `compose.mbs.yml`: Bedrock runtime and Bedrock world-backup sidecar.
 - `compose.mjs.yml`: Java runtime.
+- `config/mbs/backup/config.yml`: Bedrock world-backup sidecar config.
 - `.env.mbs.example` and `.env.mjs.example`: local env templates only.
 - `README.md`: human operating instructions.
 
