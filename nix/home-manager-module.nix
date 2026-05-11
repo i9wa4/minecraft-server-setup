@@ -57,7 +57,7 @@ let
           type = types.str;
           default =
             if name == "mbs" then
-              "${homeDir}/mc/server-setup/compose.yml"
+              "${homeDir}/mc/server-setup/compose.mbs.yml"
             else
               "${homeDir}/mc/server-setup/compose.${name}.yml";
           description = "Docker Compose file for this server.";
@@ -78,8 +78,8 @@ let
         backup = {
           enable = mkOption {
             type = types.bool;
-            default = name == "mbs";
-            description = "Whether to enable local backup service and timer.";
+            default = true;
+            description = "Whether to enable local core-config backup service and timer.";
           };
 
           localOnCalendar = mkOption {

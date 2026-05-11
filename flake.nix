@@ -31,7 +31,7 @@
       treefmtEval = pkgs: treefmt-nix.lib.evalModule pkgs ./treefmt.nix;
 
       mkUbuntuHome =
-        username:
+        username: enabled:
         let
           system = "x86_64-linux";
           pkgs = import nixpkgs {
@@ -44,41 +44,37 @@
           inherit pkgs;
           modules = [
             self.homeManagerModules.default
-            (
-              { lib, ... }:
-              {
-                home = {
-                  inherit username;
-                  homeDirectory = homeDir;
-                  enableNixpkgsReleaseCheck = false;
-                  stateVersion = "25.11";
-                };
+            (_: {
+              home = {
+                inherit username;
+                homeDirectory = homeDir;
+                enableNixpkgsReleaseCheck = false;
+                stateVersion = "25.11";
+              };
 
-                programs.home-manager.enable = true;
-                systemd.user.startServices = "sd-switch";
+              programs.home-manager.enable = true;
+              systemd.user.startServices = "sd-switch";
 
-                services.minecraft = {
-                  enable = true;
-                  servers = {
-                    mbs = {
-                      enable = true;
-                      repoDir = "${homeDir}/mc/server-setup";
-                      envFile = "${homeDir}/mc/server-setup/.env.mbs";
-                      composeFile = "${homeDir}/mc/server-setup/compose.yml";
-                    };
+              services.minecraft = {
+                enable = true;
+                servers = {
+                  mbs = {
+                    enable = enabled.mbs or false;
+                    repoDir = "${homeDir}/mc/server-setup";
+                    envFile = "${homeDir}/mc/server-setup/.env.mbs";
+                    composeFile = "${homeDir}/mc/server-setup/compose.mbs.yml";
+                  };
 
-                    mjs = {
-                      enable = lib.mkDefault false;
-                      repoDir = "${homeDir}/mc/server-setup";
-                      envFile = "${homeDir}/mc/server-setup/.env.mjs";
-                      composeFile = "${homeDir}/mc/server-setup/compose.mjs.yml";
-                      backup.enable = false;
-                      backup.cloud.enable = false;
-                    };
+                  mjs = {
+                    enable = enabled.mjs or false;
+                    repoDir = "${homeDir}/mc/server-setup";
+                    envFile = "${homeDir}/mc/server-setup/.env.mjs";
+                    composeFile = "${homeDir}/mc/server-setup/compose.mjs.yml";
+                    backup.cloud.enable = false;
                   };
                 };
-              }
-            )
+              };
+            })
           ];
         };
     in
@@ -159,6 +155,8 @@
           mjs-ps = mkApp mjs "ps";
           mjs-logs = mkApp mjs "logs";
           mjs-timers = mkApp mjs "timers";
+          mjs-backup-local = mkApp mjs "backup-local";
+          mjs-backup-cloud = mkApp mjs "backup-cloud";
         }
       );
 
@@ -181,18 +179,32 @@
           default = pkgs.mkShell {
             packages = [
               self.packages.${system}.mc-server
+              pkgs.actionlint
               pkgs.deadnix
               pkgs.docker-compose
+              pkgs.ghalint
+              pkgs.gitleaks
               pkgs.jq
+              pkgs.pinact
               pkgs.shellcheck
               pkgs.statix
+              pkgs.zizmor
               (treefmtEval pkgs).config.build.wrapper
+            ];
+          };
+          ci = pkgs.mkShell {
+            packages = [
+              pkgs.actionlint
+              pkgs.ghalint
+              pkgs.gitleaks
+              pkgs.pinact
+              pkgs.zizmor
             ];
           };
         }
       );
 
-      homeConfigurations.mc =
+      homeConfigurations =
         let
           username =
             let
@@ -206,6 +218,13 @@
             else
               "uma";
         in
-        mkUbuntuHome username;
+        {
+          mbs = mkUbuntuHome username { mbs = true; };
+          mjs = mkUbuntuHome username { mjs = true; };
+          mc = mkUbuntuHome username {
+            mbs = true;
+            mjs = true;
+          };
+        };
     };
 }

@@ -51,12 +51,20 @@ let
     pkgs.runCommand "check-home-manager-module"
       {
         nativeBuildInputs = [ pkgs.jq ];
-        service = builtins.toJSON self.homeConfigurations.mc.config.systemd.user.services.mbs.Service;
-        timers = builtins.toJSON self.homeConfigurations.mc.config.systemd.user.timers;
+        mbsService = builtins.toJSON self.homeConfigurations.mbs.config.systemd.user.services.mbs.Service;
+        mbsTimers = builtins.toJSON self.homeConfigurations.mbs.config.systemd.user.timers;
+        mjsService = builtins.toJSON self.homeConfigurations.mjs.config.systemd.user.services.mjs.Service;
+        mjsTimers = builtins.toJSON self.homeConfigurations.mjs.config.systemd.user.timers;
+        mcServices = builtins.toJSON self.homeConfigurations.mc.config.systemd.user.services;
+        mcTimers = builtins.toJSON self.homeConfigurations.mc.config.systemd.user.timers;
       }
       ''
-        printf '%s' "$service" | jq -e '.ExecStart[0] | contains("/bin/mbs up")' >/dev/null
-        printf '%s' "$timers" | jq -e 'has("mbs-update") and has("mbs-backup-local") and (has("mbs-backup-cloud") | not)' >/dev/null
+        printf '%s' "$mbsService" | jq -e '.ExecStart[0] | contains("/bin/mbs up")' >/dev/null
+        printf '%s' "$mbsTimers" | jq -e 'has("mbs-update") and has("mbs-backup-local") and (has("mbs-backup-cloud") | not)' >/dev/null
+        printf '%s' "$mjsService" | jq -e '.ExecStart[0] | contains("/bin/mjs up")' >/dev/null
+        printf '%s' "$mjsTimers" | jq -e 'has("mjs-update") and has("mjs-backup-local") and (has("mjs-backup-cloud") | not)' >/dev/null
+        printf '%s' "$mcServices" | jq -e 'has("mbs") and has("mjs")' >/dev/null
+        printf '%s' "$mcTimers" | jq -e 'has("mbs-update") and has("mjs-update") and has("mbs-backup-local") and has("mjs-backup-local")' >/dev/null
         touch $out
       '';
 
@@ -90,6 +98,26 @@ let
         deadnix --fail flake.nix nix treefmt.nix
         touch $out
       '';
+
+  githubActionsCheck =
+    pkgs.runCommand "check-github-actions"
+      {
+        nativeBuildInputs = [
+          pkgs.actionlint
+          pkgs.ghalint
+          pkgs.pinact
+          pkgs.zizmor
+        ];
+      }
+      ''
+        cd ${self}
+        workflow_files="$(find .github/workflows -type f \( -name '*.yml' -o -name '*.yaml' \))"
+        actionlint $workflow_files
+        ghalint run
+        pinact run
+        zizmor .github/workflows
+        touch $out
+      '';
 in
 {
   packages = self.packages.${system}.mc-server;
@@ -97,7 +125,8 @@ in
   mjs = self.packages.${system}.mjs;
   legacy-shell = legacyShellCheck;
   nix-lint = nixLintCheck;
-  compose-mbs = composeCheck "mbs" ./../compose.yml;
+  github-actions = githubActionsCheck;
+  compose-mbs = composeCheck "mbs" ./../compose.mbs.yml;
   compose-mjs = composeCheck "mjs" ./../compose.mjs.yml;
 }
 // pkgs.lib.optionalAttrs pkgs.stdenv.hostPlatform.isLinux {

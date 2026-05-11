@@ -59,12 +59,14 @@ The checkout path is intentionally `~/mc/server-setup`, not `~/mbs/...`,
 because this repository manages both `mbs` and `mjs`. Bedrock data defaults to
 `~/mc/mbs`; Java data defaults to `~/mc/mjs`.
 
-Create local env files. These are ignored by Git.
+Create local env files for the server flavors you plan to run. These are
+ignored by Git.
 
 ```sh
 cp .env.mbs.example .env.mbs
 cp .env.mjs.example .env.mjs
 vim .env.mbs
+vim .env.mjs
 ```
 
 Install Ubuntu host dependencies. This installs Docker Engine from Docker's
@@ -72,8 +74,12 @@ official apt repository, plus `openssh-server` and `ufw`. It also enables
 `ssh`, `docker`, and `containerd`, and adds `MY_USER_NAME` to the `docker`
 group.
 
+Use either flavor command; `host-setup` is the same host bootstrap path:
+
 ```sh
 nix run .#mbs-host-setup
+# or
+nix run .#mjs-host-setup
 ```
 
 Log out and back in after `host-setup` so Docker group membership is
@@ -99,20 +105,15 @@ Run doctor before changing the firewall.
 
 ```sh
 nix run .#mbs-doctor
+nix run .#mjs-doctor
 ```
 
-Initialize host firewall rules and systemd user lingering.
+Initialize host firewall rules and systemd user lingering for the flavor you
+plan to expose.
 
 ```sh
 nix run .#mbs-host-init
-```
-
-For Java:
-
-```sh
-vim .env.mjs
-nix run .#mjs-host-setup
-nix run .#mjs-doctor
+# or
 nix run .#mjs-host-init
 ```
 
@@ -121,20 +122,29 @@ running it.
 
 ## 4. Start With Home Manager
 
-The default standalone Home Manager configuration enables `mbs` and leaves
-`mjs` disabled.
+Choose the Home Manager profile that matches the server flavor you want:
+
+| Profile | Services | Use when |
+| --- | --- | --- |
+| `.#mbs` | `mbs` only | Bedrock server only |
+| `.#mjs` | `mjs` only | Java server only, including the future GeyserMC path |
+| `.#mc` | `mbs` and `mjs` | Running both flavors on one host |
 
 ```sh
+home-manager switch --flake .#mbs
+# or
+home-manager switch --flake .#mjs
+# or
 home-manager switch --flake .#mc
 ```
 
-This creates:
+Each enabled server creates the same shape of user units:
 
-- `mbs.service`
-- `mbs-update.timer`
-- `mbs-backup-local.timer`
+- `<server>.service`
+- `<server>-update.timer`
+- `<server>-backup-local.timer`
 
-The service starts Docker Compose through the `mbs` command. Timers run through
+The service starts Docker Compose through the flavor command. Timers run through
 the same command, so the compose/env paths stay in one place.
 
 Check the service and timers.
@@ -143,6 +153,10 @@ Check the service and timers.
 systemctl --user status mbs
 systemctl --user list-timers 'mbs-*'
 journalctl --user -u mbs -f
+
+systemctl --user status mjs
+systemctl --user list-timers 'mjs-*'
+journalctl --user -u mjs -f
 ```
 
 Start, stop, and restart through systemd:
@@ -151,6 +165,10 @@ Start, stop, and restart through systemd:
 systemctl --user start mbs
 systemctl --user stop mbs
 systemctl --user restart mbs
+
+systemctl --user start mjs
+systemctl --user stop mjs
+systemctl --user restart mjs
 ```
 
 ## 5. Manual Operations
@@ -165,7 +183,19 @@ nix run .#mbs-update
 nix run .#mbs-backup-local
 ```
 
+Java:
+
+```sh
+nix run .#mjs-up
+nix run .#mjs-logs
+nix run .#mjs-ps
+nix run .#mjs-update
+nix run .#mjs-backup-local
+```
+
 After Home Manager installs the packages, use the shorter command:
+
+Bedrock:
 
 ```sh
 mbs up
@@ -175,22 +205,14 @@ mbs update
 mbs backup-local
 ```
 
-Java manual operations:
-
-```sh
-nix run .#mjs-up
-nix run .#mjs-logs
-nix run .#mjs-ps
-nix run .#mjs-update
-```
-
-Equivalent installed commands:
+Java:
 
 ```sh
 mjs up
 mjs logs
 mjs ps
 mjs update
+mjs backup-local
 ```
 
 Other useful commands:
@@ -203,26 +225,24 @@ mbs stop
 mbs restart
 mbs timers
 mbs doctor
+
+mjs host-setup
+mjs host-init
+mjs down
+mjs stop
+mjs restart
+mjs timers
+mjs doctor
 ```
 
-## 6. Enabling Java Service
+## 6. Java And GeyserMC
 
-`mjs` is wired into the Home Manager module but disabled in the default
-standalone config. Enable it from another Home Manager config, or extend this
-flake config:
+`mjs` is a peer of `mbs`, not a secondary mode. Use `.#mjs` for Java-only
+servers and `.#mc` when both services should run on one host.
 
-```nix
-{
-  services.minecraft = {
-    enable = true;
-    servers.mjs = {
-      enable = true;
-      backup.enable = false;
-      backup.cloud.enable = false;
-    };
-  };
-}
-```
+The planned GeyserMC path belongs under `mjs`. When GeyserMC is added, treat its
+Bedrock-facing UDP port as part of the `mjs` service. Do not bind the same UDP
+port from both `mbs` and `mjs` on one host.
 
 Java world backups are disabled by default because live-copy backups can be
 inconsistent. Add a Java-safe backup strategy before enabling scheduled Java
@@ -235,19 +255,22 @@ Update the repo and apply Home Manager changes:
 ```sh
 cd ~/mc/server-setup
 git pull
-home-manager switch --flake .#mc
+home-manager switch --flake .#mbs
+# or .#mjs / .#mc
 ```
 
-Pull new container images and restart the Bedrock server:
+Pull new container images and restart a server:
 
 ```sh
 mbs update
+mjs update
 ```
 
-The scheduled update timer runs `mbs update` using:
+The scheduled update timer runs `<server> update` using:
 
 ```nix
 services.minecraft.servers.mbs.updateOnCalendar
+services.minecraft.servers.mjs.updateOnCalendar
 ```
 
 Set it to `null` in a Home Manager override to disable the update timer.
@@ -256,11 +279,14 @@ Set it to `null` in a Home Manager override to disable the update timer.
 
 World data and core config are backed up separately.
 
-For `mbs`, world backups are handled by the `backup` service in `compose.yml`
-using `kaiede/minecraft-bedrock-backup`. That container talks to the Bedrock
-server and writes world backups into `DIR_BACKUP_WORLDS`.
+For `mbs`, world backups are handled by the `backup` service in
+`compose.mbs.yml` using `kaiede/minecraft-bedrock-backup`. That container talks
+to the Bedrock server and writes world backups into `DIR_BACKUP_WORLDS`.
 
-The Nix-managed `mbs-backup-local.timer` only backs up core config files:
+The Nix-managed `<server>-backup-local.timer` backs up core config files. It
+does not back up Java world data.
+
+Bedrock candidates include:
 
 - `allowlist.json`
 - `permissions.json`
@@ -268,10 +294,22 @@ The Nix-managed `mbs-backup-local.timer` only backs up core config files:
 - `valid_known_packs.json`
 - `.env.mbs`
 
+Java candidates include:
+
+- `server.properties`
+- `whitelist.json`
+- `ops.json`
+- `banned-ips.json`
+- `banned-players.json`
+- `usercache.json`
+- `eula.txt`
+- `.env.mjs`
+
 Run a local backup manually:
 
 ```sh
 mbs backup-local
+mjs backup-local
 ```
 
 Run cloud backup manually only after intentionally logging in to AWS:
@@ -282,11 +320,15 @@ mbs backup-cloud
 ```
 
 `mbs backup-cloud` syncs `DIR_BACKUP` to `S3_BACKUP_URI`, so it uploads both
-world backups and core config archives. No cloud backup timer is enabled unless
-you explicitly set:
+world backups and core config archives. `mjs backup-cloud` syncs the Java
+backup root in the same way, but Java world archives must be produced by a
+Java-safe backup strategy first.
+
+No cloud backup timer is enabled unless you explicitly set:
 
 ```nix
 services.minecraft.servers.mbs.backup.cloud.enable = true;
+services.minecraft.servers.mjs.backup.cloud.enable = true;
 ```
 
 Restore Bedrock world data:
@@ -366,6 +408,7 @@ Check command/env/compose readiness:
 
 ```sh
 mbs doctor
+mjs doctor
 ```
 
 Check systemd:
@@ -374,13 +417,20 @@ Check systemd:
 systemctl --user status mbs
 journalctl --user -u mbs -n 200
 systemctl --user list-timers 'mbs-*'
+
+systemctl --user status mjs
+journalctl --user -u mjs -n 200
+systemctl --user list-timers 'mjs-*'
 ```
 
 Check Docker:
 
 ```sh
-docker compose --env-file .env.mbs -f compose.yml -p mbs ps
-docker compose --env-file .env.mbs -f compose.yml -p mbs logs --tail=100 -f
+docker compose --env-file .env.mbs -f compose.mbs.yml -p mbs ps
+docker compose --env-file .env.mbs -f compose.mbs.yml -p mbs logs --tail=100 -f
+
+docker compose --env-file .env.mjs -f compose.mjs.yml -p mjs ps
+docker compose --env-file .env.mjs -f compose.mjs.yml -p mjs logs --tail=100 -f
 ```
 
 Check firewall:

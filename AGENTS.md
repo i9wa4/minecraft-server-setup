@@ -13,8 +13,9 @@ The repo separates server flavors by command and local config:
 - `mbs`: Minecraft Bedrock Server
 - `mjs`: Minecraft Java Server
 
-`compose.yml` and `compose.mjs.yml` remain Docker runtime declarations. Nix owns
-the CLI packages, Home Manager module, systemd user services/timers, and checks.
+`compose.mbs.yml` and `compose.mjs.yml` remain Docker runtime declarations. Nix
+owns the CLI packages, Home Manager module, systemd user services/timers, and
+checks.
 
 ## 2. Start Here
 
@@ -35,7 +36,11 @@ the CLI packages, Home Manager module, systemd user services/timers, and checks.
   wiring.
 - `treefmt.nix`: repo formatting policy for `nix fmt` and
   `checks.*.formatting`.
-- `compose.yml`: Bedrock runtime and Bedrock world-backup sidecar.
+- `.github/workflows/ci.yml`: GitHub Actions entrypoint; keep it thin and let
+  Nix checks own repo validation.
+- `.github/dependabot.yml`: dependency update policy for GitHub Actions and Nix.
+- `docs/design.md`: design notes and operational boundaries.
+- `compose.mbs.yml`: Bedrock runtime and Bedrock world-backup sidecar.
 - `compose.mjs.yml`: Java runtime.
 - `.env.mbs.example` and `.env.mjs.example`: local env templates only.
 - `README.md`: human operating instructions.
@@ -58,10 +63,14 @@ support.
   explicitly requests it in the current turn.
 - Cloud backup is manual by default. Do not enable `backup.cloud.enable` unless
   the user explicitly asks for scheduled cloud backup.
-- Bedrock world backups are owned by the `backup` service in `compose.yml`.
-  `mbs backup-local` is for core config archives.
+- Bedrock world backups are owned by the `backup` service in `compose.mbs.yml`.
+  `mbs backup-local` and `mjs backup-local` are for core config archives.
 - Java world backups need a Java-safe strategy. Do not add blind live-copy world
   backups for `mjs`.
+- Treat `mbs` and `mjs` as peer server flavors. Do not make one the default
+  operational path unless the user explicitly asks.
+- Future GeyserMC work belongs under `mjs`; document any extra Bedrock-facing
+  UDP port and avoid port conflicts with `mbs`.
 
 ## 5. Checks
 
@@ -94,7 +103,8 @@ nix run path:$PWD#mjs -- help
 For Home Manager wiring checks:
 
 ```sh
-nix eval path:$PWD#homeConfigurations.mc.config.systemd.user.services.mbs.Service --json | jq
+nix eval path:$PWD#homeConfigurations.mbs.config.systemd.user.timers --json | jq 'keys'
+nix eval path:$PWD#homeConfigurations.mjs.config.systemd.user.timers --json | jq 'keys'
 nix eval path:$PWD#homeConfigurations.mc.config.systemd.user.timers --json | jq 'keys'
 ```
 

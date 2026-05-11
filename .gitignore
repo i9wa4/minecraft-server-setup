@@ -1,5 +1,15 @@
+# Nix build outputs
+result
+result-*
+
+# direnv / local shells
+.direnv/
+
+# Local secrets and host-specific env
 .authorizedKeys
 .env
 .env.mbs
 .env.mjs
+
+# Runtime health markers
 .service_is_healthy

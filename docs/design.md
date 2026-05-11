@@ -1,0 +1,80 @@
+# Design Notes
+
+This repository is an operations repo for Minecraft servers on Ubuntu. It is
+not a global machine profile and it is not a dotfiles extension.
+
+## Scope
+
+The repo owns Minecraft-specific operations:
+
+- `mbs`: Minecraft Bedrock Server
+- `mjs`: Minecraft Java Server
+- Docker Compose runtime declarations
+- Nix-built operation CLIs
+- Home Manager user services and timers
+- local core-config backups
+
+The repo can bootstrap host dependencies through `host-setup`, but those host
+packages are not assumed to belong on every machine. Docker, sshd, UFW, and
+systemd lingering are installed only when this repo is used on a Minecraft host.
+
+## Server Flavors
+
+`mbs` and `mjs` are peers. Avoid making one the implicit operational default.
+
+The provided Home Manager profiles are:
+
+- `.#mbs`: Bedrock service only
+- `.#mjs`: Java service only
+- `.#mc`: both services
+
+The checkout path is shared at `~/mc/server-setup`. Server data is split by
+flavor:
+
+- `~/mc/mbs`
+- `~/mc/mjs`
+
+This avoids treating Bedrock as the parent namespace for Java.
+
+## Docker Boundary
+
+Docker Compose is the runtime declaration because the upstream server images
+already encode most server runtime behavior. Nix owns the command surface,
+checks, and systemd user wiring around Compose.
+
+`host-setup` follows Docker's official Ubuntu apt repository installation flow.
+Do not replace it with Ubuntu's `docker.io` package unless this repo explicitly
+decides to stop tracking Docker's upstream install method.
+
+## GeyserMC Direction
+
+`mjs` is expected to be the home for a future GeyserMC-based Java server setup.
+That keeps cross-play behavior attached to the Java server flavor instead of
+turning `mbs` into a catch-all Bedrock-client entrypoint.
+
+When GeyserMC is added, document the extra Bedrock-facing UDP port explicitly.
+Do not bind the same UDP port from both `mbs` and `mjs` on one host.
+
+## Backups
+
+World backups and core config backups are separate concerns.
+
+`mbs` world backups are handled by the Bedrock backup sidecar in
+`compose.mbs.yml`. `mbs backup-local` and `mjs backup-local` back up core config
+files only.
+
+Java world backups need a Java-safe strategy before scheduling. Acceptable
+directions include RCON `save-off`/`save-all flush`/archive/`save-on`, a
+server-side backup plugin, or a short scheduled stop/archive/start flow.
+
+Cloud backup is manual by default. Do not schedule cloud backup or run AWS login
+commands unless explicitly requested for the current task.
+
+## CI And Formatting
+
+`nix fmt` is the single formatter entrypoint. `nix flake check` owns package
+builds, Compose validation, Home Manager wiring checks, shell lint, Nix lint,
+formatting checks, and GitHub Actions lint.
+
+GitHub Actions should stay thin: install Nix, restore a Nix cache, run the flake
+checks, build the CLIs, smoke-test the CLIs, and run a gitleaks history scan.

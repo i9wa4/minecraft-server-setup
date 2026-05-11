@@ -220,12 +220,31 @@ let
       echo "TIMESTAMP=''${timestamp}"
 
       mkdir -p "''${DIR_BACKUP_CORE}"
-      zip "''${DIR_BACKUP_CORE}/core.''${timestamp}.zip" \
+      local files=()
+      local candidate
+      for candidate in \
         "''${DIR_SERVER}/allowlist.json" \
         "''${DIR_SERVER}/permissions.json" \
-        "''${DIR_SERVER}/server.properties" \
         "''${DIR_SERVER}/valid_known_packs.json" \
-        "''${env_path}"
+        "''${DIR_SERVER}/whitelist.json" \
+        "''${DIR_SERVER}/ops.json" \
+        "''${DIR_SERVER}/banned-ips.json" \
+        "''${DIR_SERVER}/banned-players.json" \
+        "''${DIR_SERVER}/usercache.json" \
+        "''${DIR_SERVER}/eula.txt" \
+        "''${DIR_SERVER}/server.properties" \
+        "''${env_path}"; do
+        if [ -e "''${candidate}" ]; then
+          files+=("''${candidate}")
+        fi
+      done
+
+      if [ "''${#files[@]}" -eq 0 ]; then
+        echo "no core config files found to back up" >&2
+        exit 1
+      fi
+
+      zip "''${DIR_BACKUP_CORE}/core.''${timestamp}.zip" "''${files[@]}"
 
       cd "''${DIR_BACKUP_CORE}"
       # shellcheck disable=SC2012
@@ -359,7 +378,7 @@ let
     text = ''
       export MINECRAFT_SERVER_ID=mbs
       export MINECRAFT_ENV_FILE="''${MINECRAFT_ENV_FILE:-.env.mbs}"
-      export MINECRAFT_COMPOSE_FILE="''${MINECRAFT_COMPOSE_FILE:-compose.yml}"
+      export MINECRAFT_COMPOSE_FILE="''${MINECRAFT_COMPOSE_FILE:-compose.mbs.yml}"
       exec mc-server "$@"
     '';
   };
