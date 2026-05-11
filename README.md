@@ -269,7 +269,49 @@ mjs timers
 mjs doctor
 ```
 
-## 6. Java And GeyserMC
+## 6. Nintendo Switch BedrockConnect
+
+Nintendo Switch does not expose a normal custom server address field for
+Bedrock servers. To join `mbs` from Switch, use the BedrockConnect DNS method
+described in:
+
+- <https://www.radical-dreamer.com/game/minecraft_bedrockconnect/>
+- <https://github.com/Pugmatt/BedrockConnect>
+
+On the Switch, open the network settings for the Wi-Fi connection and set DNS
+to manual:
+
+| Setting       | Value             |
+| ------------- | ----------------- |
+| Primary DNS   | `104.238.130.180` |
+| Secondary DNS | `8.8.8.8`         |
+
+Then open Minecraft, go to the Servers tab, and join a redirect-compatible
+featured server such as The Hive, Mineville, Lifeboat, Enchanted, or Galaxite.
+The BedrockConnect screen should appear.
+
+From BedrockConnect, choose `Connect to a Server` and enter:
+
+| Setting        | Value                         |
+| -------------- | ----------------------------- |
+| Server Address | the Ubuntu server LAN address |
+| Server Port    | `19132`                       |
+
+For the current default `mbs` LAN setup, the address is typically the Ubuntu
+host address on the home network. Check it on the Ubuntu server with:
+
+```sh
+hostname -I
+```
+
+If the server IP changes after reboot, update the saved BedrockConnect server
+entry or configure a fixed address in the router or OS network settings.
+
+If `104.238.130.180` does not open BedrockConnect, try another DNS-method
+enabled public BedrockConnect instance from the upstream list. Keep the
+secondary DNS as `8.8.8.8`.
+
+## 7. Java And GeyserMC
 
 `mjs` is a peer of `mbs`, not a secondary mode. Use `.#mjs` for Java-only
 servers and `.#mc` when both services should run on one host.
@@ -282,7 +324,7 @@ Java world backups are disabled by default because live-copy backups can be
 inconsistent. Add a Java-safe backup strategy before enabling scheduled Java
 backups.
 
-## 7. Updating
+## 8. Updating
 
 Update the repo and apply Home Manager changes:
 
@@ -309,7 +351,7 @@ services.minecraft.servers.mjs.updateOnCalendar
 
 Set it to `null` in a Home Manager override to disable the update timer.
 
-## 8. Backup And Restore
+## 9. Backup And Restore
 
 World data and core config are backed up separately.
 
@@ -389,7 +431,7 @@ plain `aws s3 sync`. `aws s3 sync` is simple and works for offsite copies, but
 restic adds encryption, deduplication, retention policies, and safer restore
 history.
 
-## 9. Firewall
+## 10. Firewall
 
 `mbs host-init` and `mjs host-init` set:
 
@@ -409,7 +451,7 @@ If the server IP came from DHCP, configure the fixed address at the router or OS
 network layer. This repo only manages service ports, not DHCP/static IP
 assignment.
 
-## 10. Module Shape
+## 11. Module Shape
 
 The module is exported as:
 
@@ -437,7 +479,7 @@ Useful per-server options:
 - `backup.cloud.enable`
 - `backup.cloud.onCalendar`
 
-## 11. Troubleshooting
+## 12. Troubleshooting
 
 Check command/env/compose readiness:
 
@@ -477,7 +519,7 @@ sudo ufw status verbose
 If `docker` exists but the daemon is unreachable, confirm Docker is running and
 your user has Docker group access.
 
-## 12. Development Checks
+## 13. Development Checks
 
 Format and validate the repo through Nix:
 
