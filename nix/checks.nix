@@ -5,13 +5,6 @@
   ...
 }:
 let
-  legacyShellScripts = [
-    ./../bin/backup-to-cloud.sh
-    ./../bin/backup-to-local.sh
-    ./../bin/init.sh
-    ./../bin/update.sh
-  ];
-
   testEnv = pkgs.writeText "minecraft-test.env" ''
     MY_UID=1000
     MY_GID=1000
@@ -68,22 +61,6 @@ let
         touch $out
       '';
 
-  legacyShellCheck =
-    pkgs.runCommand "check-legacy-shell"
-      {
-        nativeBuildInputs = [
-          pkgs.bash
-          pkgs.shellcheck
-        ];
-      }
-      ''
-        for script in ${pkgs.lib.escapeShellArgs legacyShellScripts}; do
-          bash -n "$script"
-          shellcheck "$script"
-        done
-        touch $out
-      '';
-
   nixLintCheck =
     pkgs.runCommand "check-nix-lint"
       {
@@ -123,7 +100,6 @@ in
   packages = self.packages.${system}.mc-server;
   mbs = self.packages.${system}.mbs;
   mjs = self.packages.${system}.mjs;
-  legacy-shell = legacyShellCheck;
   nix-lint = nixLintCheck;
   github-actions = githubActionsCheck;
   compose-mbs = composeCheck "mbs" ./../compose.mbs.yml;

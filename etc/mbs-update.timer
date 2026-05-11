@@ -1,8 +1,0 @@
-[Unit]
-Description=Minecraft Bedrock Server Update Timer
-
-[Timer]
-OnCalendar=Sat 6:00:00
-
-[Install]
-WantedBy=timers.target

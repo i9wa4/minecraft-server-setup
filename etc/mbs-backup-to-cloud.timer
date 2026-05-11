@@ -1,8 +1,0 @@
-[Unit]
-Description=Minecraft Bedrock Server Backup to Cloud Timer
-
-[Timer]
-OnCalendar=Sat 5:00:00
-
-[Install]
-WantedBy=timers.target

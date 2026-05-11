@@ -45,9 +45,11 @@ checks.
 - `.env.mbs.example` and `.env.mjs.example`: local env templates only.
 - `README.md`: human operating instructions.
 
-Legacy `bin/*.sh` scripts are retained for manual Bedrock operations. Do not add
-new operational behavior there unless the user explicitly asks for legacy script
-support.
+Systemd unit files are generated from `nix/home-manager-module.nix`; do not add
+an `etc/` unit-file source tree.
+
+Operational scripts are generated from `nix/packages.nix`; do not add a `bin/`
+script source tree for normal operations.
 
 ## 4. Operational Rules
 

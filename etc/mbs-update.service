@@ -1,6 +1,0 @@
-[Unit]
-Description=Minecraft Bedrock Server Update
-
-[Service]
-Type=oneshot
-ExecStart=bash mc/server-setup/bin/update.sh
