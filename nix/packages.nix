@@ -17,6 +17,7 @@ let
 
     Commands:
       doctor        Check required host commands and env values
+      host-setup    Install Ubuntu host packages using Docker's official apt repo
       host-init     Initialize host firewall and user lingering
       init          Create server directories
       up            Start the Minecraft server
@@ -97,6 +98,89 @@ let
       if [ -n "''${DIR_BACKUP_WORLDS:-}" ]; then
         mkdir -p "''${DIR_BACKUP_WORLDS}"
       fi
+    }
+
+    host_setup() {
+      require_env
+      require_command sudo
+      require_command apt-get
+      require_command curl
+      require_command dpkg
+      require_command systemctl
+
+      if [ ! -r /etc/os-release ]; then
+        echo "missing /etc/os-release; host-setup currently supports Ubuntu only" >&2
+        exit 1
+      fi
+
+      # shellcheck disable=SC1091
+      . /etc/os-release
+      if [ "''${ID:-}" != "ubuntu" ]; then
+        echo "unsupported OS: ''${ID:-unknown}; host-setup follows Docker's official Ubuntu install docs" >&2
+        exit 1
+      fi
+
+      local codename arch
+      codename="''${UBUNTU_CODENAME:-''${VERSION_CODENAME:-}}"
+      arch="$(dpkg --print-architecture)"
+      if [ -z "''${codename}" ]; then
+        echo "cannot determine Ubuntu codename from /etc/os-release" >&2
+        exit 1
+      fi
+
+      local conflicts=()
+      while IFS= read -r package_name; do
+        conflicts+=("''${package_name}")
+      done < <(
+        dpkg --get-selections \
+          docker.io \
+          docker-compose \
+          docker-compose-v2 \
+          docker-doc \
+          podman-docker \
+          containerd \
+          runc 2>/dev/null | awk '{print $1}'
+      )
+
+      if [ "''${#conflicts[@]}" -gt 0 ]; then
+        sudo apt-get remove -y "''${conflicts[@]}"
+      fi
+
+      sudo apt-get update
+      sudo apt-get install -y ca-certificates curl openssh-server ufw
+      sudo install -m 0755 -d /etc/apt/keyrings
+      curl -fsSL https://download.docker.com/linux/ubuntu/gpg |
+        sudo tee /etc/apt/keyrings/docker.asc >/dev/null
+      sudo chmod a+r /etc/apt/keyrings/docker.asc
+
+      sudo tee /etc/apt/sources.list.d/docker.sources >/dev/null <<EOF
+    Types: deb
+    URIs: https://download.docker.com/linux/ubuntu
+    Suites: ''${codename}
+    Components: stable
+    Architectures: ''${arch}
+    Signed-By: /etc/apt/keyrings/docker.asc
+    EOF
+
+      sudo apt-get update
+      sudo apt-get install -y \
+        docker-ce \
+        docker-ce-cli \
+        containerd.io \
+        docker-buildx-plugin \
+        docker-compose-plugin
+
+      sudo systemctl enable --now ssh
+      sudo systemctl enable --now docker
+      sudo systemctl enable containerd.service
+
+      if ! getent group docker >/dev/null 2>&1; then
+        sudo groupadd docker
+      fi
+      sudo usermod -aG docker "''${MY_USER_NAME}"
+
+      echo "host setup complete"
+      echo "log out and log back in so docker group membership is re-evaluated"
     }
 
     host_init() {
@@ -200,6 +284,9 @@ let
       doctor)
         doctor
         ;;
+      host-setup)
+        host_setup
+        ;;
       host-init)
         host_init
         ;;
@@ -254,6 +341,8 @@ let
       pkgs.awscli2
       pkgs.bash
       pkgs.coreutils
+      pkgs.curl
+      pkgs.gawk
       pkgs.gnugrep
       pkgs.gnused
       pkgs.zip

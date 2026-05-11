@@ -49,6 +49,8 @@ support.
 - Ubuntu is the target server platform.
 - Docker daemon, sshd, UFW, and `loginctl enable-linger` are host bootstrap
   concerns. Do not pretend Home Manager fully owns them.
+- `host-setup` follows Docker's official Ubuntu apt repository installation
+  flow. Do not replace it with Ubuntu's unofficial `docker.io` package.
 - Runtime secrets and host-local values belong in ignored `.env.mbs` and
   `.env.mjs` files, not in Nix or committed docs.
 - Do not run `mbs backup-cloud`, `nix run .#mbs-backup-cloud`, `aws sso login`,

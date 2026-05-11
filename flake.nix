@@ -134,6 +134,7 @@
             meta.description = "Run the Minecraft Java server operations CLI";
           };
           mbs-doctor = mkApp mbs "doctor";
+          mbs-host-setup = mkApp mbs "host-setup";
           mbs-host-init = mkApp mbs "host-init";
           mbs-init = mkApp mbs "init";
           mbs-up = mkApp mbs "up";
@@ -147,6 +148,7 @@
           mbs-backup-local = mkApp mbs "backup-local";
           mbs-backup-cloud = mkApp mbs "backup-cloud";
           mjs-doctor = mkApp mjs "doctor";
+          mjs-host-setup = mkApp mjs "host-setup";
           mjs-host-init = mkApp mjs "host-init";
           mjs-init = mkApp mjs "init";
           mjs-up = mkApp mjs "up";

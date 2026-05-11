@@ -40,19 +40,15 @@ credentials are intentionally available.
 - UFW
 - AWS CLI credentials, only when running manual S3 backup
 
-Install and enable Docker/sshd outside this flake.
+Docker installation follows Docker's official Ubuntu apt repository docs:
 
-```sh
-sudo systemctl enable --now ssh
-sudo systemctl enable --now docker
-sudo usermod -aG docker "$USER"
-```
+- <https://docs.docker.com/engine/install/ubuntu/>
+- <https://docs.docker.com/engine/install/linux-postinstall/>
 
-Log out and back in after changing Docker group membership.
+This repo provides `host-setup` so the server setup stays with the Minecraft
+operations repo instead of becoming a global dotfiles default.
 
 ## 3. Initial Setup
-
-Clone this repository on the server.
 
 ```sh
 git clone https://github.com/i9wa4/minecraft-server-setup ~/mbs/minecraft-server-setup
@@ -66,6 +62,18 @@ cp .env.mbs.example .env.mbs
 cp .env.mjs.example .env.mjs
 vim .env.mbs
 ```
+
+Install Ubuntu host dependencies. This installs Docker Engine from Docker's
+official apt repository, plus `openssh-server` and `ufw`. It also enables
+`ssh`, `docker`, and `containerd`, and adds `MY_USER_NAME` to the `docker`
+group.
+
+```sh
+nix run .#mbs-host-setup
+```
+
+Log out and back in after `host-setup` so Docker group membership is
+re-evaluated.
 
 Edit values for your host:
 
@@ -99,6 +107,7 @@ For Java:
 
 ```sh
 vim .env.mjs
+nix run .#mjs-host-setup
 nix run .#mjs-doctor
 nix run .#mjs-host-init
 ```
@@ -183,6 +192,8 @@ mjs update
 Other useful commands:
 
 ```sh
+mbs host-setup
+mbs host-init
 mbs down
 mbs stop
 mbs restart
