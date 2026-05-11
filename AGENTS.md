@@ -28,7 +28,7 @@ the CLI packages, Home Manager module, systemd user services/timers, and checks.
 ## 3. Source of Truth
 
 - `flake.nix`: flake outputs, apps, checks, and standalone Home Manager config.
-- `nix/packages.nix`: generated `minecraft-server`, `mbs`, and `mjs` CLIs.
+- `nix/packages.nix`: generated `mc-server`, `mbs`, and `mjs` CLIs.
 - `nix/home-manager-module.nix`: `services.minecraft` options and systemd user
   units.
 - `nix/checks.nix`: flake checks for packages, compose config, and module
@@ -81,7 +81,7 @@ nix flake check --all-systems path:$PWD
 For focused package checks:
 
 ```sh
-nix build path:$PWD#mbs path:$PWD#mjs path:$PWD#minecraft-server
+nix build path:$PWD#mbs path:$PWD#mjs path:$PWD#mc-server
 ```
 
 For CLI smoke checks:
@@ -94,8 +94,8 @@ nix run path:$PWD#mjs -- help
 For Home Manager wiring checks:
 
 ```sh
-nix eval path:$PWD#homeConfigurations.minecraft.config.systemd.user.services.mbs.Service --json | jq
-nix eval path:$PWD#homeConfigurations.minecraft.config.systemd.user.timers --json | jq 'keys'
+nix eval path:$PWD#homeConfigurations.mc.config.systemd.user.services.mbs.Service --json | jq
+nix eval path:$PWD#homeConfigurations.mc.config.systemd.user.timers --json | jq 'keys'
 ```
 
 After `flake.nix` is tracked, the normal forms are acceptable:
@@ -103,7 +103,7 @@ After `flake.nix` is tracked, the normal forms are acceptable:
 ```sh
 nix fmt
 nix flake check --all-systems
-nix build .#mbs .#mjs .#minecraft-server
+nix build .#mbs .#mjs .#mc-server
 ```
 
 Do not require a Docker daemon for repository checks. Compose validation belongs

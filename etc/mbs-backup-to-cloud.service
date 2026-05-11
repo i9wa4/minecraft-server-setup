@@ -5,7 +5,7 @@ Wants=mbs-backup-to-local.service
 
 [Service]
 Type=oneshot
-ExecStart=bash mbs/minecraft-bedrock-server-setup/bin/backup-to-cloud.sh
+ExecStart=bash mc/server-setup/bin/backup-to-cloud.sh
 
 [Install]
 WantedBy=multi-user.target

@@ -51,8 +51,8 @@ let
     pkgs.runCommand "check-home-manager-module"
       {
         nativeBuildInputs = [ pkgs.jq ];
-        service = builtins.toJSON self.homeConfigurations.minecraft.config.systemd.user.services.mbs.Service;
-        timers = builtins.toJSON self.homeConfigurations.minecraft.config.systemd.user.timers;
+        service = builtins.toJSON self.homeConfigurations.mc.config.systemd.user.services.mbs.Service;
+        timers = builtins.toJSON self.homeConfigurations.mc.config.systemd.user.timers;
       }
       ''
         printf '%s' "$service" | jq -e '.ExecStart[0] | contains("/bin/mbs up")' >/dev/null
@@ -92,7 +92,7 @@ let
       '';
 in
 {
-  packages = self.packages.${system}.minecraft-server;
+  packages = self.packages.${system}.mc-server;
   mbs = self.packages.${system}.mbs;
   mjs = self.packages.${system}.mjs;
   legacy-shell = legacyShellCheck;

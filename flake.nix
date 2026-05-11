@@ -62,16 +62,16 @@
                   servers = {
                     mbs = {
                       enable = true;
-                      repoDir = "${homeDir}/mbs/minecraft-server-setup";
-                      envFile = "${homeDir}/mbs/minecraft-server-setup/.env.mbs";
-                      composeFile = "${homeDir}/mbs/minecraft-server-setup/compose.yml";
+                      repoDir = "${homeDir}/mc/server-setup";
+                      envFile = "${homeDir}/mc/server-setup/.env.mbs";
+                      composeFile = "${homeDir}/mc/server-setup/compose.yml";
                     };
 
                     mjs = {
                       enable = lib.mkDefault false;
-                      repoDir = "${homeDir}/mbs/minecraft-server-setup";
-                      envFile = "${homeDir}/mbs/minecraft-server-setup/.env.mjs";
-                      composeFile = "${homeDir}/mbs/minecraft-server-setup/compose.mjs.yml";
+                      repoDir = "${homeDir}/mc/server-setup";
+                      envFile = "${homeDir}/mc/server-setup/.env.mjs";
+                      composeFile = "${homeDir}/mc/server-setup/compose.mjs.yml";
                       backup.enable = false;
                       backup.cloud.enable = false;
                     };
@@ -93,14 +93,14 @@
       apps = forAllSystems (
         system: pkgs:
         let
-          minecraft-server = "${self.packages.${system}.minecraft-server}/bin/minecraft-server";
+          mc-server = "${self.packages.${system}.mc-server}/bin/mc-server";
           mbs = "${self.packages.${system}.mbs}/bin/mbs";
           mjs = "${self.packages.${system}.mjs}/bin/mjs";
           mkApp =
             package: command:
             let
               app = pkgs.writeShellApplication {
-                name = "minecraft-${command}";
+                name = "mc-${command}";
                 text = ''
                   exec ${package} ${command} "$@"
                 '';
@@ -108,19 +108,19 @@
             in
             {
               type = "app";
-              program = "${app}/bin/minecraft-${command}";
+              program = "${app}/bin/mc-${command}";
               meta.description = "Run ${command}";
             };
         in
         {
           default = {
             type = "app";
-            program = minecraft-server;
+            program = mc-server;
             meta.description = "Run the Minecraft server operations CLI";
           };
-          minecraft-server = {
+          mc-server = {
             type = "app";
-            program = minecraft-server;
+            program = mc-server;
             meta.description = "Run the Minecraft server operations CLI";
           };
           mbs = {
@@ -180,7 +180,7 @@
         system: pkgs: {
           default = pkgs.mkShell {
             packages = [
-              self.packages.${system}.minecraft-server
+              self.packages.${system}.mc-server
               pkgs.deadnix
               pkgs.docker-compose
               pkgs.jq
@@ -192,7 +192,7 @@
         }
       );
 
-      homeConfigurations.minecraft =
+      homeConfigurations.mc =
         let
           username =
             let

@@ -3,4 +3,4 @@ Description=Minecraft Bedrock Server Update
 
 [Service]
 Type=oneshot
-ExecStart=bash mbs/minecraft-bedrock-server-setup/bin/update.sh
+ExecStart=bash mc/server-setup/bin/update.sh

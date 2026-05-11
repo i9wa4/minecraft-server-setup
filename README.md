@@ -51,9 +51,13 @@ operations repo instead of becoming a global dotfiles default.
 ## 3. Initial Setup
 
 ```sh
-git clone https://github.com/i9wa4/minecraft-server-setup ~/mbs/minecraft-server-setup
-cd ~/mbs/minecraft-server-setup
+git clone https://github.com/i9wa4/minecraft-server-setup ~/mc/server-setup
+cd ~/mc/server-setup
 ```
+
+The checkout path is intentionally `~/mc/server-setup`, not `~/mbs/...`,
+because this repository manages both `mbs` and `mjs`. Bedrock data defaults to
+`~/mc/mbs`; Java data defaults to `~/mc/mjs`.
 
 Create local env files. These are ignored by Git.
 
@@ -121,7 +125,7 @@ The default standalone Home Manager configuration enables `mbs` and leaves
 `mjs` disabled.
 
 ```sh
-home-manager switch --flake .#minecraft
+home-manager switch --flake .#mc
 ```
 
 This creates:
@@ -229,9 +233,9 @@ backups.
 Update the repo and apply Home Manager changes:
 
 ```sh
-cd ~/mbs/minecraft-server-setup
+cd ~/mc/server-setup
 git pull
-home-manager switch --flake .#minecraft
+home-manager switch --flake .#mc
 ```
 
 Pull new container images and restart the Bedrock server:
@@ -400,7 +404,7 @@ Format and validate the repo through Nix:
 ```sh
 nix fmt
 nix flake check --all-systems
-nix build .#mbs .#mjs .#minecraft-server
+nix build .#mbs .#mjs .#mc-server
 ```
 
 While new flake files are still untracked:

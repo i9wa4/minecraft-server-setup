@@ -36,20 +36,20 @@ let
             if builtins.hasAttr name self.packages.${system} then
               self.packages.${system}.${name}
             else
-              self.packages.${system}.minecraft-server;
+              self.packages.${system}.mc-server;
           defaultText = "self.packages.\${pkgs.system}.${name}";
           description = "Package that provides the ${name} command.";
         };
 
         repoDir = mkOption {
           type = types.str;
-          default = "${homeDir}/mbs/minecraft-server-setup";
+          default = "${homeDir}/mc/server-setup";
           description = "Repository checkout used as the Docker Compose working directory.";
         };
 
         envFile = mkOption {
           type = types.str;
-          default = "${homeDir}/mbs/minecraft-server-setup/.env.${name}";
+          default = "${homeDir}/mc/server-setup/.env.${name}";
           description = "Environment file used for Docker Compose interpolation and container env.";
         };
 
@@ -57,9 +57,9 @@ let
           type = types.str;
           default =
             if name == "mbs" then
-              "${homeDir}/mbs/minecraft-server-setup/compose.yml"
+              "${homeDir}/mc/server-setup/compose.yml"
             else
-              "${homeDir}/mbs/minecraft-server-setup/compose.${name}.yml";
+              "${homeDir}/mc/server-setup/compose.${name}.yml";
           description = "Docker Compose file for this server.";
         };
 

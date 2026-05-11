@@ -3,7 +3,7 @@
   ...
 }:
 let
-  minecraftServerScript = ''
+  mcServerScript = ''
     server_id="''${MINECRAFT_SERVER_ID:-minecraft}"
     repo_root="''${MINECRAFT_REPO_ROOT:-$PWD}"
     env_file="''${MINECRAFT_ENV_FILE:-.env.''${server_id}}"
@@ -335,8 +335,8 @@ let
     esac
   '';
 
-  minecraft-server = pkgs.writeShellApplication {
-    name = "minecraft-server";
+  mc-server = pkgs.writeShellApplication {
+    name = "mc-server";
     runtimeInputs = [
       pkgs.awscli2
       pkgs.bash
@@ -349,34 +349,34 @@ let
     ];
     text = ''
       export PATH="$PATH:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
-      ${minecraftServerScript}
+      ${mcServerScript}
     '';
   };
 
   mbs = pkgs.writeShellApplication {
     name = "mbs";
-    runtimeInputs = [ minecraft-server ];
+    runtimeInputs = [ mc-server ];
     text = ''
       export MINECRAFT_SERVER_ID=mbs
       export MINECRAFT_ENV_FILE="''${MINECRAFT_ENV_FILE:-.env.mbs}"
       export MINECRAFT_COMPOSE_FILE="''${MINECRAFT_COMPOSE_FILE:-compose.yml}"
-      exec minecraft-server "$@"
+      exec mc-server "$@"
     '';
   };
 
   mjs = pkgs.writeShellApplication {
     name = "mjs";
-    runtimeInputs = [ minecraft-server ];
+    runtimeInputs = [ mc-server ];
     text = ''
       export MINECRAFT_SERVER_ID=mjs
       export MINECRAFT_ENV_FILE="''${MINECRAFT_ENV_FILE:-.env.mjs}"
       export MINECRAFT_COMPOSE_FILE="''${MINECRAFT_COMPOSE_FILE:-compose.mjs.yml}"
       export PORT_SERVER_PROTO="''${PORT_SERVER_PROTO:-tcp}"
-      exec minecraft-server "$@"
+      exec mc-server "$@"
     '';
   };
 in
 {
-  default = minecraft-server;
-  inherit minecraft-server mbs mjs;
+  default = mc-server;
+  inherit mc-server mbs mjs;
 }
