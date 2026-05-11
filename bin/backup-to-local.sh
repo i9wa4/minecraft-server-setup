@@ -7,6 +7,7 @@ export LC_ALL=C.UTF-8
 
 cd "$(dirname "$0")"
 
+# shellcheck disable=SC1091
 . ../.env
 
 TIMESTAMP=$(date '+%Y%m%d-%H%M%S')
@@ -14,14 +15,15 @@ echo TIMESTAMP="${TIMESTAMP}"
 
 echo "back up core data"
 zip "${DIR_BACKUP_CORE}"/core."${TIMESTAMP}".zip \
-	"${DIR_SERVER}"/allowlist.json \
-	"${DIR_SERVER}"/permissions.json \
-	"${DIR_SERVER}"/server.properties \
-	"${DIR_SERVER}"/valid_known_packs.json \
-	"${DIR_REPO}"/.env
+  "${DIR_SERVER}"/allowlist.json \
+  "${DIR_SERVER}"/permissions.json \
+  "${DIR_SERVER}"/server.properties \
+  "${DIR_SERVER}"/valid_known_packs.json \
+  "${DIR_REPO}"/.env
 
 echo "remove old core backups"
 cd "${DIR_BACKUP_CORE}"
+# shellcheck disable=SC2012
 ls -t | tail -n +9 | xargs -r rm
 
 # NOTE: use kaiede/minecraft-bedrock-backup instead

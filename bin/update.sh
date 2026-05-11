@@ -7,6 +7,7 @@ export LC_ALL=C.UTF-8
 
 cd "$(dirname "$0")"
 
+# shellcheck disable=SC1091
 . ../.env
 
 echo "update the server"

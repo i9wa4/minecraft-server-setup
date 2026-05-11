@@ -1,0 +1,23 @@
+services:
+  public:
+    image: itzg/minecraft-server:latest
+    container_name: ${SERVER_NAME}
+    user: ${MY_UID}:${MY_GID}
+    restart: always
+    env_file:
+      - ${ENV_FILE:-.env.mjs}
+    tty: true
+    stdin_open: true
+    ports:
+      - ${PORT_SERVER}:${PORT_SERVER}/tcp
+    environment:
+      EULA: "TRUE"
+      VERSION: "LATEST"
+      UID: ${MY_UID}
+      GID: ${MY_GID}
+      TZ: ${MY_TZ}
+      SERVER_NAME: ${SERVER_NAME}
+      MOTD: ${SERVER_MOTD}
+      LEVEL: ${WORLD_NAME}
+    volumes:
+      - "${DIR_SERVER}:/data"

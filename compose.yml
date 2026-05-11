@@ -5,7 +5,7 @@ services:
     user: ${MY_UID}:${MY_GID}
     restart: always
     env_file:
-      - .env
+      - ${ENV_FILE:-.env.mbs}
     tty: true
     stdin_open: true
     ports:
@@ -23,13 +23,12 @@ services:
       LEVEL_NAME: ${WORLD_NAME}
     volumes:
       - "${DIR_SERVER}:/data"
-
   backup:
     image: kaiede/minecraft-bedrock-backup
     container_name: ${SERVER_NAME}-backup
     restart: always
     env_file:
-      - .env
+      - ${ENV_FILE:-.env.mbs}
     depends_on:
       # Make sure the minecraft service starts before the backup
       - "public"

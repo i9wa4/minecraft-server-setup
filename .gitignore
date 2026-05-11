@@ -1,3 +1,5 @@
 .authorizedKeys
 .env
+.env.mbs
+.env.mjs
 .service_is_healthy
