@@ -22,11 +22,11 @@ simple and avoids turning `mbs` into a mixed-purpose entrypoint.
 
 ## Candidate Designs
 
-| Design                         | Summary                                                  | Fit                         |
-| ------------------------------ | -------------------------------------------------------- | --------------------------- |
-| Paper plugin in `mjs`          | Run `itzg/minecraft-server` with `TYPE=PAPER`, install Geyser and Floodgate as plugins, expose Java TCP and Bedrock UDP ports. | Best first implementation.  |
-| Standalone Geyser sidecar      | Run Geyser as a separate process/container pointing at `mjs`. Floodgate needs key sharing from the Java server plugin. | Useful later if isolation matters. |
-| Proxy layer                    | Put Velocity/Bungee in front, install Geyser on the proxy. | Too much for the current single-server setup. |
+| Design                         | Summary                                                                                                                        | Fit                                           |
+| ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------- |
+| Paper plugin in `mjs`          | Run `itzg/minecraft-server` with `TYPE=PAPER`, install Geyser and Floodgate as plugins, expose Java TCP and Bedrock UDP ports. | Best first implementation.                    |
+| Standalone Geyser sidecar      | Run Geyser as a separate process/container pointing at `mjs`. Floodgate needs key sharing from the Java server plugin.         | Useful later if isolation matters.            |
+| Proxy layer                    | Put Velocity/Bungee in front, install Geyser on the proxy.                                                                     | Too much for the current single-server setup. |
 
 ## Recommended First Implementation
 
