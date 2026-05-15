@@ -269,6 +269,62 @@ mjs timers
 mjs doctor
 ```
 
+### Bedrock allowlist
+
+For a private `mbs` server, keep `allow-list=true` in
+`$DIR_SERVER/server.properties`. Approved players are host-local runtime state
+in `$DIR_SERVER/allowlist.json`; do not commit player gamertags or XUIDs to the
+repository.
+
+Prefer live console commands over hand-editing JSON:
+
+```sh
+set -a
+. ./.env.mbs
+set +a
+
+docker compose --env-file .env.mbs -f compose.mbs.yml -p "$SERVER_NAME" \
+  exec -T public send-command allowlist on
+
+docker compose --env-file .env.mbs -f compose.mbs.yml -p "$SERVER_NAME" \
+  exec -T public send-command allowlist add "<BedrockGamertag>"
+
+docker compose --env-file .env.mbs -f compose.mbs.yml -p "$SERVER_NAME" \
+  exec -T public send-command allowlist list
+```
+
+The `send-command` helper writes to the Bedrock server console. It usually
+prints command results in the server logs, not in the shell. Verify changes
+with:
+
+```sh
+docker compose --env-file .env.mbs -f compose.mbs.yml -p "$SERVER_NAME" \
+  logs --tail=50 public
+
+cat "$DIR_SERVER/allowlist.json"
+```
+
+To remove a player:
+
+```sh
+docker compose --env-file .env.mbs -f compose.mbs.yml -p "$SERVER_NAME" \
+  exec -T public send-command allowlist remove "<BedrockGamertag>"
+```
+
+If you edit `allowlist.json` directly, reload it from the console or restart
+the server:
+
+```sh
+docker compose --env-file .env.mbs -f compose.mbs.yml -p "$SERVER_NAME" \
+  exec -T public send-command allowlist reload
+```
+
+After intentional allowlist or permission changes, take a core config backup:
+
+```sh
+mbs backup-local
+```
+
 ## 6. Nintendo Switch BedrockConnect
 
 Nintendo Switch does not expose a normal custom server address field for
