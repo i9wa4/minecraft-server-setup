@@ -61,6 +61,16 @@ let
         touch $out
       '';
 
+  systemdInstallAppsCheck = pkgs.runCommand "check-systemd-install-apps" { } ''
+    test -x ${self.apps.${system}.mbs-install.program}
+    test -x ${self.apps.${system}.mbs-uninstall.program}
+    test -x ${self.apps.${system}.mjs-install.program}
+    test -x ${self.apps.${system}.mjs-uninstall.program}
+    test -x ${self.apps.${system}.mc-install.program}
+    test -x ${self.apps.${system}.mc-uninstall.program}
+    touch $out
+  '';
+
   nixLintCheck =
     pkgs.runCommand "check-nix-lint"
       {
@@ -107,4 +117,5 @@ in
 }
 // pkgs.lib.optionalAttrs pkgs.stdenv.hostPlatform.isLinux {
   home-manager-module = homeManagerCheck;
+  systemd-install-apps = systemdInstallAppsCheck;
 }
