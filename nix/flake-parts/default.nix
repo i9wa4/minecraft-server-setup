@@ -8,7 +8,6 @@
     ./modules/devshells.nix
     ./modules/home-manager.nix
     ./modules/packages.nix
-    ./modules/pre-commit.nix
     ./modules/treefmt.nix
   ];
 }
