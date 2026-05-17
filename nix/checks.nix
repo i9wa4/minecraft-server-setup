@@ -45,19 +45,35 @@ let
       {
         nativeBuildInputs = [ pkgs.jq ];
         mbsService = builtins.toJSON self.homeConfigurations.mbs.config.systemd.user.services.mbs.Service;
+        mbsBackupLocalUnit =
+          builtins.toJSON
+            self.homeConfigurations.mbs.config.systemd.user.services."mbs-backup-local".Unit;
+        mbsBackupSyncService =
+          builtins.toJSON
+            self.homeConfigurations.mbs.config.systemd.user.services."mbs-backup-sync".Service;
         mbsTimers = builtins.toJSON self.homeConfigurations.mbs.config.systemd.user.timers;
         mjsService = builtins.toJSON self.homeConfigurations.mjs.config.systemd.user.services.mjs.Service;
+        mjsBackupLocalUnit =
+          builtins.toJSON
+            self.homeConfigurations.mjs.config.systemd.user.services."mjs-backup-local".Unit;
+        mjsBackupSyncService =
+          builtins.toJSON
+            self.homeConfigurations.mjs.config.systemd.user.services."mjs-backup-sync".Service;
         mjsTimers = builtins.toJSON self.homeConfigurations.mjs.config.systemd.user.timers;
         mcServices = builtins.toJSON self.homeConfigurations.mc.config.systemd.user.services;
         mcTimers = builtins.toJSON self.homeConfigurations.mc.config.systemd.user.timers;
       }
       ''
         printf '%s' "$mbsService" | jq -e '.ExecStart[0] | contains("/bin/mbs up")' >/dev/null
-        printf '%s' "$mbsTimers" | jq -e 'has("mbs-update") and has("mbs-backup-local") and (has("mbs-backup-cloud") | not)' >/dev/null
+        printf '%s' "$mbsBackupLocalUnit" | jq -e '.OnSuccess[0] == "mbs-backup-sync.service"' >/dev/null
+        printf '%s' "$mbsBackupSyncService" | jq -e '.ExecStart[0] | contains("/bin/mbs backup-sync")' >/dev/null
+        printf '%s' "$mbsTimers" | jq -e 'has("mbs-update") and has("mbs-backup-local") and (has("mbs-backup-sync") | not) and (has("mbs-backup-cloud") | not)' >/dev/null
         printf '%s' "$mjsService" | jq -e '.ExecStart[0] | contains("/bin/mjs up")' >/dev/null
-        printf '%s' "$mjsTimers" | jq -e 'has("mjs-update") and has("mjs-backup-local") and (has("mjs-backup-cloud") | not)' >/dev/null
-        printf '%s' "$mcServices" | jq -e 'has("mbs") and has("mjs")' >/dev/null
-        printf '%s' "$mcTimers" | jq -e 'has("mbs-update") and has("mjs-update") and has("mbs-backup-local") and has("mjs-backup-local")' >/dev/null
+        printf '%s' "$mjsBackupLocalUnit" | jq -e '.OnSuccess[0] == "mjs-backup-sync.service"' >/dev/null
+        printf '%s' "$mjsBackupSyncService" | jq -e '.ExecStart[0] | contains("/bin/mjs backup-sync")' >/dev/null
+        printf '%s' "$mjsTimers" | jq -e 'has("mjs-update") and has("mjs-backup-local") and (has("mjs-backup-sync") | not) and (has("mjs-backup-cloud") | not)' >/dev/null
+        printf '%s' "$mcServices" | jq -e 'has("mbs") and has("mjs") and has("mbs-backup-sync") and has("mjs-backup-sync")' >/dev/null
+        printf '%s' "$mcTimers" | jq -e 'has("mbs-update") and has("mjs-update") and has("mbs-backup-local") and has("mjs-backup-local") and (has("mbs-backup-sync") | not) and (has("mjs-backup-sync") | not)' >/dev/null
         touch $out
       '';
 
@@ -66,6 +82,8 @@ let
     test -x ${self.apps.${system}.mbs-uninstall.program}
     test -x ${self.apps.${system}.mjs-install.program}
     test -x ${self.apps.${system}.mjs-uninstall.program}
+    test -x ${self.apps.${system}.mbs-backup-sync.program}
+    test -x ${self.apps.${system}.mjs-backup-sync.program}
     test -x ${self.apps.${system}.mc-install.program}
     test -x ${self.apps.${system}.mc-uninstall.program}
     touch $out

@@ -128,6 +128,7 @@
                   "''${server}.service" \
                   "''${server}-update.service" \
                   "''${server}-backup-local.service" \
+                  "''${server}-backup-sync.service" \
                   "''${server}-update.timer" \
                   "''${server}-backup-local.timer"; do
                   link_unit "''${unit}"
@@ -213,6 +214,7 @@
                   "''${server}.service"
                   "''${server}-update.service"
                   "''${server}-backup-local.service"
+                  "''${server}-backup-sync.service"
                   "''${server}-update.timer"
                   "''${server}-backup-local.timer"
                 )
@@ -275,6 +277,7 @@
         mbs-logs = mkApp mbs "logs";
         mbs-timers = mkApp mbs "timers";
         mbs-backup-local = mkApp mbs "backup-local";
+        mbs-backup-sync = mkApp mbs "backup-sync";
         mbs-backup-cloud = mkApp mbs "backup-cloud";
         mjs-doctor = mkApp mjs "doctor";
         mjs-host-setup = mkApp mjs "host-setup";
@@ -289,6 +292,7 @@
         mjs-logs = mkApp mjs "logs";
         mjs-timers = mkApp mjs "timers";
         mjs-backup-local = mkApp mjs "backup-local";
+        mjs-backup-sync = mkApp mjs "backup-sync";
         mjs-backup-cloud = mkApp mjs "backup-cloud";
       }
       // lib.optionalAttrs pkgs.stdenv.hostPlatform.isLinux {

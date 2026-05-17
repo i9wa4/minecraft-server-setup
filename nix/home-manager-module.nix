@@ -101,6 +101,18 @@ let
               description = "systemd OnCalendar value for cloud backup sync.";
             };
           };
+
+          remoteSync = {
+            enable = mkOption {
+              type = types.bool;
+              default = true;
+              description = ''
+                Whether to install the env-gated remote backup sync service.
+                Runtime sync remains controlled by BACKUP_REMOTE_SYNC_ENABLE in
+                the server env file.
+              '';
+            };
+          };
         };
       };
     };
@@ -154,12 +166,29 @@ let
   mkBackupLocalService =
     name: server:
     nameValuePair "${name}-backup-local" {
-      Unit.Description = "Minecraft server ${name} local backup";
+      Unit = {
+        Description = "Minecraft server ${name} local backup";
+      }
+      // optionalAttrs server.backup.remoteSync.enable {
+        OnSuccess = [ "${name}-backup-sync.service" ];
+      };
       Service = {
         Type = "oneshot";
         WorkingDirectory = server.repoDir;
         Environment = serviceEnvFor name server;
         ExecStart = "${commandFor name server} backup-local";
+      };
+    };
+
+  mkBackupSyncService =
+    name: server:
+    nameValuePair "${name}-backup-sync" {
+      Unit.Description = "Minecraft server ${name} remote backup sync";
+      Service = {
+        Type = "oneshot";
+        WorkingDirectory = server.repoDir;
+        Environment = serviceEnvFor name server;
+        ExecStart = "${commandFor name server} backup-sync";
       };
     };
 
@@ -235,6 +264,9 @@ in
       (mapAttrs' mkServerService enabledServers)
       (mapAttrs' mkUpdateService enabledServers)
       (mapAttrs' mkBackupLocalService (filterAttrs (_: server: server.backup.enable) enabledServers))
+      (mapAttrs' mkBackupSyncService (
+        filterAttrs (_: server: server.backup.enable && server.backup.remoteSync.enable) enabledServers
+      ))
       (mapAttrs' mkBackupCloudService (
         filterAttrs (_: server: server.backup.cloud.enable) enabledServers
       ))

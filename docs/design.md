@@ -13,6 +13,7 @@ The repo owns Minecraft-specific operations:
 - Nix-built operation CLIs
 - Home Manager-generated user systemd services and timers
 - local core-config backups
+- env-gated remote backup sync for existing backup directories
 
 The repo can bootstrap host dependencies through `host-setup`, but those host
 packages are not assumed to belong on every machine. Docker, sshd, UFW, and
@@ -103,6 +104,20 @@ server-side backup plugin, or a short scheduled stop/archive/start flow.
 
 Cloud backup is manual by default. Do not schedule cloud backup or run AWS login
 commands unless explicitly requested for the current task.
+
+Remote backup sync is separate from cloud backup. The repo may install
+`<server>-backup-sync.service` as a user systemd unit, but the runtime behavior
+must be controlled by ignored `.env.mbs` and `.env.mjs` values. If
+`BACKUP_REMOTE_SYNC_ENABLE` is not true, remote sync is a no-op. When enabled,
+it syncs `DIR_BACKUP/` with `rsync` after local backup success. Do not commit
+remote hostnames, usernames, paths, SSH keys, Tailscale state, bucket URIs, or
+cloud credentials.
+Do not target public or loosely shared remotes unless config archives containing
+`.env.*` values are excluded or encrypted first.
+
+Tailscale installation, authentication, node state, and ACL policy remain
+host/dotfiles concerns. This repo can assume a configured remote shell such as
+`ssh`, but it should not own Tailscale setup.
 
 ## CI And Formatting
 

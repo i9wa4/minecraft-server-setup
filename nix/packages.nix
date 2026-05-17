@@ -29,6 +29,7 @@ let
       logs          Follow compose logs
       timers        Show Minecraft systemd user timers
       backup-local  Back up core server files locally
+      backup-sync   Sync backup data to a remote rsync target when enabled
       backup-cloud  Sync backups to S3
     USAGE
     }
@@ -261,6 +262,83 @@ let
       aws s3 sync "''${DIR_BACKUP}" "''${S3_BACKUP_URI}" --profile="''${AWS_PROFILE}"
     }
 
+    remote_sync_enabled() {
+      case "''${BACKUP_REMOTE_SYNC_ENABLE:-false}" in
+        true | TRUE | True | 1 | yes | YES | on | ON)
+          return 0
+          ;;
+        false | FALSE | False | 0 | no | NO | off | OFF | "")
+          return 1
+          ;;
+        *)
+          echo "invalid BACKUP_REMOTE_SYNC_ENABLE: ''${BACKUP_REMOTE_SYNC_ENABLE}" >&2
+          return 2
+          ;;
+      esac
+    }
+
+    require_remote_sync_target() {
+      if [ -z "''${BACKUP_REMOTE_SYNC_TARGET:-}" ]; then
+        echo "BACKUP_REMOTE_SYNC_TARGET must be set when BACKUP_REMOTE_SYNC_ENABLE=true" >&2
+        return 1
+      fi
+
+      case "''${BACKUP_REMOTE_SYNC_TARGET}" in
+        *:*)
+          ;;
+        *)
+          echo "BACKUP_REMOTE_SYNC_TARGET must be an rsync remote target with an explicit path, such as user@host:/path" >&2
+          return 1
+          ;;
+      esac
+
+      case "''${BACKUP_REMOTE_SYNC_TARGET}" in
+        *:)
+          echo "BACKUP_REMOTE_SYNC_TARGET must include a destination path, not a bare host:" >&2
+          return 1
+          ;;
+      esac
+    }
+
+    backup_sync() {
+      require_env
+
+      if remote_sync_enabled; then
+        :
+      else
+        case "$?" in
+          1)
+            echo "remote backup sync disabled by BACKUP_REMOTE_SYNC_ENABLE=''${BACKUP_REMOTE_SYNC_ENABLE:-false}"
+            return 0
+            ;;
+          *)
+            exit 1
+            ;;
+        esac
+      fi
+
+      : "''${DIR_BACKUP:?DIR_BACKUP must be set in ''${env_file}}"
+      require_remote_sync_target || exit 1
+      BACKUP_REMOTE_SYNC_RSH="''${BACKUP_REMOTE_SYNC_RSH:-ssh}"
+
+      if [ ! -d "''${DIR_BACKUP}" ]; then
+        echo "missing backup directory: ''${DIR_BACKUP}" >&2
+        exit 1
+      fi
+
+      require_command rsync
+      rsync -a \
+        --numeric-ids \
+        --no-owner \
+        --no-group \
+        --partial \
+        --partial-dir=.rsync-partial \
+        --info=stats1 \
+        --rsh="''${BACKUP_REMOTE_SYNC_RSH}" \
+        "''${DIR_BACKUP}/" \
+        "''${BACKUP_REMOTE_SYNC_TARGET}"
+    }
+
     doctor() {
       local failed=0
       for command_name in bash docker systemctl sudo ufw zip; do
@@ -273,6 +351,28 @@ let
 
       if require_env; then
         echo "ok: ''${env_path}"
+        if remote_sync_enabled; then
+          if require_command rsync; then
+            echo "ok: rsync"
+          else
+            failed=1
+          fi
+
+          if require_remote_sync_target; then
+            echo "ok: BACKUP_REMOTE_SYNC_TARGET"
+          else
+            failed=1
+          fi
+        else
+          case "$?" in
+            1)
+              echo "ok: remote backup sync disabled"
+              ;;
+            *)
+              failed=1
+              ;;
+          esac
+        fi
       else
         failed=1
       fi
@@ -344,6 +444,9 @@ let
       backup-local)
         backup_local
         ;;
+      backup-sync)
+        backup_sync
+        ;;
       backup-cloud)
         backup_cloud
         ;;
@@ -364,6 +467,7 @@ let
       pkgs.gawk
       pkgs.gnugrep
       pkgs.gnused
+      pkgs.rsync
       pkgs.zip
     ];
     text = ''
