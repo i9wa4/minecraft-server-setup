@@ -161,11 +161,11 @@ running it.
 
 Choose the installer that matches the server flavor you want:
 
-| App              | Services        | Use when                                             |
-| ---------------- | --------------- | ---------------------------------------------------- |
-| `.#mbs-install`  | `mbs` only      | Bedrock server only                                  |
-| `.#mjs-install`  | `mjs` only      | Java server only, including the future GeyserMC path |
-| `.#mc-install`   | `mbs` and `mjs` | Running both flavors on one host                     |
+| App             | Services        | Use when                                             |
+| --------------- | --------------- | ---------------------------------------------------- |
+| `.#mbs-install` | `mbs` only      | Bedrock server only                                  |
+| `.#mjs-install` | `mjs` only      | Java server only, including the future GeyserMC path |
+| `.#mc-install`  | `mbs` and `mjs` | Running both flavors on one host                     |
 
 ```sh
 nix run '.#mbs-install'
